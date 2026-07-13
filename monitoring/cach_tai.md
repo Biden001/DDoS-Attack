@@ -1,7 +1,7 @@
 # Monitoring Stack Setup
 
 This project runs:
-
+ 
 - FastNetMon exporter metrics on port `9209`
 - node_exporter on port `9100`
 - Prometheus to scrape both targets
@@ -140,11 +140,11 @@ scrape_configs:
     metrics_path: /metrics
     fallback_scrape_protocol: PrometheusText0.0.4
     static_configs:
-      - targets: ['192.168.25.129:9209']
+      - targets: ['<YOUR IP>:9209']
 
   - job_name: 'node-exporter'
     static_configs:
-      - targets: ['192.168.25.129:9100']
+      - targets: ['<YOUR IP>:9100']
 ```
 
 Notes:
@@ -167,7 +167,7 @@ Check containers:
 docker ps
 ```
 
-If Prometheus runs in Docker, it must be able to reach `192.168.25.129:9100` and `192.168.25.129:9209` over the network.
+If Prometheus runs in Docker, it must be able to reach `<YOUR IP>:9100` and `<YOUR IP>:9209` over the network.
 
 ## 5. Verification Checklist
 
@@ -179,8 +179,8 @@ In Prometheus UI:
 
 Endpoints to test directly:
 
-- `http://192.168.25.129:9209/metrics`
-- `http://192.168.25.129:9100/metrics`
+- `http://<YOUR IP>:9209/metrics`
+- `http://<YOUR IP>:9100/metrics`
 
 If `node-exporter` shows DOWN with connection refused:
 
