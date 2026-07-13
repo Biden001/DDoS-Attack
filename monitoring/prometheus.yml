@@ -7,3 +7,7 @@ scrape_configs:
     fallback_scrape_protocol: PrometheusText0.0.4
     static_configs:
       - targets: ['192.168.25.129:9209']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['192.168.25.129:9100']
