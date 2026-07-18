@@ -199,6 +199,90 @@ The dashboard "Node Exporter Full" uses node_exporter metrics such as:
 
 FastNetMon metrics on port `9209` are different, so they do not fill the Node Exporter dashboard panels.
 
+## 7. FastNetMon Metrics Meaning
+
+Use these metrics in Grafana when you want to monitor DDoS traffic directly:
+
+- `fastnetmon_total_traffic_bits`: total traffic rate in bits per second. This is the main signal for bandwidth-based DDoS detection.
+- `fastnetmon_total_simple_packets_processed`: number of processed packets per second.
+- `fastnetmon_total_ipv4_packets` and `fastnetmon_total_ipv6_packets`: packet rate split by protocol family.
+- `fastnetmon_total_number_of_hosts`: how many hosts FastNetMon is tracking.
+- `fastnetmon_influxdb_writes_failed` and `fastnetmon_influxdb_writes_total`: health of the write pipeline.
+- `fastnetmon_speed_recalculation_time_seconds` and `fastnetmon_speed_recalculation_time_microseconds`: how long FastNetMon needs to recalculate traffic speed.
+
+Suggested alert levels for DDoS bandwidth monitoring:
+
+- 100 Gbps: early warning
+- 500 Gbps: high severity
+- 1 Tbps: critical incident
+
+Demo profile for class presentation:
+
+```ini
+enable_ban = on
+ban_time = 10
+
+ban_for_pps = on
+ban_for_bandwidth = on
+ban_for_flows = on
+
+threshold_pps = 10
+threshold_mbps = 1
+threshold_flows = 10
+
+threshold_tcp_mbps = 2
+threshold_udp_mbps = 2
+threshold_icmp_mbps = 1
+
+threshold_tcp_pps = 30
+threshold_udp_pps = 30
+threshold_icmp_pps = 20
+```
+
+This profile is intentionally aggressive so the demo triggers quickly.
+
+To prevent banning the management IP `192.168.25.129` in the demo, put it in the whitelist and keep it out of the monitored victim network list:
+
+```ini
+white_list_path = /etc/networks_whitelist
+networks_list_path = /etc/networks_list
+monitor_local_ip_addresses = on
+```
+
+Example `/etc/networks_whitelist` content:
+
+```text
+192.168.25.129/32
+```
+
+Make sure the victim subnet is the only subnet you monitor for attacks. If `192.168.25.129` is your Kali box or management host, it should not be in `networks_list`.
+
+Where to see top 10 DDoS IPs:
+
+- In the current Prometheus/Grafana setup, the dashboard does not yet have per-attacker IP metrics.
+- FastNetMon itself tracks per-host counters, so the top talkers are available in FastNetMon's own host counters/API path, not in the aggregate Prometheus metrics shown by this dashboard.
+- If you want top 10 IPs inside Grafana, the exporter must expose per-host/per-subnet metrics with labels such as `host` or `source_ip`.
+
+How to make Grafana show the top 10 attacker IPs for real:
+
+1. Extend FastNetMon's exporter code to emit a per-host metric for IPv4/IPv6 host counters.
+2. Use the host IP as a Prometheus label, for example `host="192.168.25.130"`.
+3. Point the Grafana panel at that metric with `topk(10, sum by (host) (rate(<per_host_metric>[1m])))`.
+4. If the code exports `source_ip` instead of `host`, replace the label in the panel query.
+
+Current codebase note:
+
+- The existing Prometheus endpoint only exposes aggregate totals.
+- The per-host counters exist in FastNetMon internals, but not as Prometheus time series yet.
+- The Grafana Top 10 panel will stay empty until that exporter work is added.
+
+Important limitation:
+
+- The current Prometheus endpoint exposes only aggregate traffic counters.
+- It does not expose attacker IP directly yet.
+- To show attacker IP in Grafana, FastNetMon must export per-host or per-subnet metrics with a label such as `source_ip` or `host`.
+- Once that exists, a panel can use a `topk(...)` query to show the busiest source IPs.
+
 ## 7. Common Issues
 
 - No data in Grafana panels:
