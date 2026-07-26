@@ -1,4 +1,4 @@
-# 🌐 Đồ Án Thực Tập: Xây Dựng Hệ Thống Giám Sát Mạng Và Cảnh Báo Sớm Tấn Công DDoS
+# 🌐 Thực Tập niên luận: Xây Dựng Hệ Thống Giám Sát Mạng Và Cảnh Báo Sớm Tấn Công DDoS
 
 ![Ubuntu](https://img.shields.io/badge/OS-Ubuntu%20Server-E95420?style=flat-square&logo=ubuntu&logoColor=white)
 ![Fastnetmon](https://img.shields.io/badge/Core-Fastnetmon-0052CC?style=flat-square&logo=linux&logoColor=white)
