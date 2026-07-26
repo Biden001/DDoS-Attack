@@ -1,6 +1,10 @@
 # 🌐 Đồ Án Thực Tập: Xây Dựng Hệ Thống Giám Sát Mạng Và Cảnh Báo Sớm Tấn Công DDoS
 
-![Topic](https://img.shields.io/badge/Topic-DDoS_Detection-red?style=flat-square) ![Environment](https://img.shields.io/badge/Environment-Ubuntu_&_Windows-orange?style=flat-square) ![Stack](https://img.shields.io/badge/Stack-Fastnetmon_&_Prometheus_&_Grafana-blue?style=flat-square)
+![Ubuntu](https://img.shields.io/badge/OS-Ubuntu%20Server-E95420?style=flat-square&logo=ubuntu&logoColor=white)
+![Fastnetmon](https://img.shields.io/badge/Core-Fastnetmon-0052CC?style=flat-square&logo=linux&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Database-Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Dashboard-Grafana-F46800?style=flat-square&logo=grafana&logoColor=white)
+![Telegram](https://img.shields.io/badge/Alert-Telegram%20Bot-26A5E4?style=flat-square&logo=telegram&logoColor=white)
 
 Dự án này là tài liệu và mã nguồn phục vụ cho đồ án thực tập viết niên luận với mục tiêu nghiên cứu, thiết kế và triển khai một hệ thống giám sát dòng lưu lượng tại biên mạng. Hệ thống tích hợp cơ chế cảnh báo hai luồng nhằm tối ưu tốc độ phát hiện sự cố và giảm thiểu thời gian dịch vụ bị gián đoạn do các cuộc tấn công DDoS.
 
@@ -44,15 +48,8 @@ Hệ thống đã được đánh giá qua việc giả lập các phương th�
 
 ---
 
-## ⚠️ Hạn Chế Hiện Tại
-
-* **Phạm vi nhận diện:** Hệ thống chỉ mới dừng lại ở việc phát hiện các cuộc tấn công thuộc Layer 3 và Layer 4, chưa thể phân tích sâu nội dung để ngăn chặn tấn công ở tầng ứng dụng (Layer 7).
-* **Nguy cơ gián đoạn cảnh báo:** Khi hệ thống bị tấn công cường độ quá lớn, tài nguyên bị cạn kiệt có thể khiến máy chủ bị treo, làm ảnh hưởng đến khả năng gửi thông báo qua Telegram.
-* **Khả năng can thiệp:** Hệ thống hiện tại chỉ đóng vai trò giám sát và cảnh báo, chưa được tích hợp cơ chế chủ động chặn (lọc gói tin) để tự động bảo vệ hệ thống.
-* **Giới hạn giao thức:** Mới chỉ hỗ trợ hoạt động với giao thức IPv4 và chưa hỗ trợ IPv6.
----
 ## 👥 Thông Tin Tác Giả
 
-* **Sinh viên thực hiện:** Đoàn Quang Huy.
+* **Thành viên thực hiện:** Đoàn Quang Huy.
 
 ---
