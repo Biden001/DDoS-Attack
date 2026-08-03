@@ -250,7 +250,91 @@ Ví dụ nội dung file `/etc/networks_whitelist`:
 
 Hãy chắc chắn rằng chỉ có subnet mục tiêu bị giám sát, còn nếu `192.168.25.129` là máy Kali hoặc host quản trị thì nó không nên nằm trong `networks_list`.
 
-## 7. Các vấn đề thường gặp
+## 8. Cau hinh thong bao qua telegram
+
+file cau hinh thong bao qua telegram: `/usr/local/bin/notify_attack.sh`
+
+```ini
+#!/bin/bash
+
+BOT_TOKEN="your_bot_token_here"
+CHAT_ID="your_chat_id_here"
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🚀 FastNetMon monitor đang chạy..."
+
+tail -n0 -F /var/log/fastnetmon.log | grep --line-buffered "We have detected attack" | while read line; do
+    TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+    VICTIM_IP=$(echo "$line" | grep -oP '\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b' | head -1)
+    ATTACK_TYPE=$(echo "$line" | grep -oP '(?<=attack type: )\S+' || echo "Unknown")
+
+    # ── Luồng 1: Hiển thị trên màn hình server ──
+    echo "⚠️  [$TIMESTAMP] CẢNH BÁO DDoS!"
+    echo "    IP nạn nhân : ${VICTIM_IP:-Không xác định}"
+    echo "    Loại tấn công: ${ATTACK_TYPE}"
+    echo "    Log gốc     : $line"
+    echo "────────────────────────────────────────"
+
+sleep 1
+
+REPORT=$(ls -t /var/log/fastnetmon_attacks/*.txt 2>/dev/null | head -1)
+
+PROTOCOL=$(grep "^Attack protocol:" "$REPORT" | cut -d':' -f2- | xargs)
+DIRECTION=$(grep "^Attack direction:" "$REPORT" | cut -d':' -f2- | xargs)
+PEAK_PPS=$(grep "^Peak attack power:" "$REPORT" | cut -d':' -f2- | xargs)
+BANDWIDTH=$(grep "^Total incoming traffic:" "$REPORT" | cut -d':' -f2- | xargs)
+
+# Lấy packet đầu tiên sau "Attack traffic dump"
+FIRST_PACKET=$(awk '
+/^Attack traffic dump$/ {
+    getline
+    while ($0 == "") getline
+    print
+    exit
+}' "$REPORT")
+
+SOURCE_IP=$(echo "$FIRST_PACKET" | awk '{print $3}' | cut -d':' -f1)
+DEST_PORT=$(echo "$FIRST_PACKET" | awk '{print $5}' | cut -d':' -f2)
+TCP_FLAG=$(echo "$FIRST_PACKET" | awk '{print $9}')
+
+PACKETS=$(grep -c "protocol:" "$REPORT")
+
+REPORT_NAME=$(basename "$REPORT")
+TG_MESSAGE="🚨 <b>CẢNH BÁO DDoS - FastNetMon</b>
+
+🕐 <b>Thời gian:</b> ${TIMESTAMP}
+🎯 <b>IP bị tấn công:</b> <code>${VICTIM_IP}</code>
+⚡ <b>Loại tấn công:</b> ${ATTACK_TYPE}
+
+📈 <b>Attack Summary</b>
+• Protocol    : ${PROTOCOL}
+• Direction   : ${DIRECTION}
+• Peak PPS    : ${PEAK_PPS}
+• Bandwidth   : ${BANDWIDTH}
+
+🔍 <b>Traffic Sample</b>
+• Source IP   : <code>${SOURCE_IP}</code>
+• Dest Port   : ${DEST_PORT}
+• TCP Flag    : ${TCP_FLAG}
+• Packets     : ${PACKETS}
+
+📁 <b>Report:</b>
+<code>${REPORT_NAME}</code>"
+
+    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+        --data-urlencode "chat_id=${CHAT_ID}" \
+        --data-urlencode "text=${TG_MESSAGE}" \
+        --data-urlencode "parse_mode=HTML" \
+        > /dev/null 2>&1 &
+
+done
+```
+chạy file này bằng lệnh:
+
+```bash
+sudo chmod +x /usr/local/bin/notify_attack.sh
+sudo /usr/local/bin/notify_attack.sh &
+```
+## 9. Các vấn đề thường gặp
 
 - Không có dữ liệu trong các panel Grafana:
   - Kiểm tra datasource đã chọn là Prometheus
