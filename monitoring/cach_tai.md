@@ -1,30 +1,30 @@
-# Monitoring Stack Setup
+# Thiết lập stack giám sát
 
-This project runs:
- 
-- FastNetMon exporter metrics on port `9209`
-- node_exporter on port `9100`
-- Prometheus to scrape both targets
-- Grafana to visualize metrics
+Dự án này chạy:
 
-## Quick Start
+- Chỉ số exporter của FastNetMon trên cổng `9209`
+- node_exporter trên cổng `9100`
+- Prometheus để thu thập dữ liệu từ cả hai mục tiêu
+- Grafana để trực quan hóa số liệu
 
-Create the files `docker-compose.yml` and `prometheus.yml`, then run:
+## Khởi động nhanh
+
+Tạo các file `docker-compose.yml` và `prometheus.yml`, sau đó chạy:
 
 ```bash
 docker-compose up -d
 ```
 
-## 1. Install FastNetMon on Ubuntu Server
+## 1. Cài đặt FastNetMon trên Ubuntu Server
 
-Update packages and install helper tools:
+Cập nhật gói phần mềm và cài đặt các công cụ hỗ trợ:
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y wget curl
 ```
 
-Download and install FastNetMon Community Edition:
+Tải về và cài đặt FastNetMon Community Edition:
 
 ```bash
 wget https://install.fastnetmon.com/installer -O installer
@@ -32,25 +32,24 @@ sudo chmod +x installer
 sudo ./installer -install_community_edition
 ```
 
-Complete the FastNetMon setup in the installer if it asks for an email or license key.
+Hoàn tất quá trình thiết lập FastNetMon trong trình cài đặt nếu nó hỏi về email hoặc khóa bản quyền.
 
-Edit the FastNetMon config:
+Chỉnh sửa cấu hình FastNetMon:
 
 ```bash
 sudo nano /etc/fastnetmon.conf
 ```
 
-Recommended Prometheus settings:
+Cấu hình Prometheus khuyến nghị:
 
 ```ini
-enable_ban = off
+enable_ban = on
 prometheus = on
 prometheus_port = 9209
 prometheus_host = 0.0.0.0
-process_ban = off
 ```
 
-Restart and enable the service:
+Khởi động lại và bật dịch vụ:
 
 ```bash
 sudo systemctl restart fastnetmon
@@ -58,24 +57,24 @@ sudo systemctl enable fastnetmon
 sudo systemctl status fastnetmon
 ```
 
-Verify the exporter endpoint locally:
+Xác minh endpoint exporter trên máy cục bộ:
 
 ```bash
 curl http://127.0.0.1:9209/metrics
 ```
 
-## 2. Install node_exporter on Ubuntu Server
+## 2. Cài đặt node_exporter trên Ubuntu Server
 
-The Grafana dashboard "Node Exporter Full" requires node_exporter metrics.
-If node_exporter is missing, the Prometheus target `node-exporter` will stay DOWN and dashboard panels will show No data.
+Bảng điều khiển Grafana "Node Exporter Full" yêu cầu các số liệu từ node_exporter.
+Nếu node_exporter chưa được cài đặt, mục tiêu Prometheus `node-exporter` sẽ ở trạng thái DOWN và các panel trên dashboard sẽ hiển thị "No data".
 
-Create a system user:
+Tạo người dùng hệ thống:
 
 ```bash
 sudo useradd --no-create-home --shell /usr/sbin/nologin --system node_exporter
 ```
 
-Download the latest release:
+Tải bản phát hành mới nhất:
 
 ```bash
 VERSION=$(curl -fsSL https://api.github.com/repos/prometheus/node_exporter/releases/latest | grep -oP '"tag_name": "\K[^"]+')
@@ -84,7 +83,7 @@ tar -xzf node_exporter-${VERSION#v}.linux-amd64.tar.gz
 sudo cp node_exporter-${VERSION#v}.linux-amd64/node_exporter /usr/local/bin/
 ```
 
-Create the systemd service:
+Tạo dịch vụ systemd:
 
 ```bash
 sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<'EOF'
@@ -103,7 +102,7 @@ WantedBy=multi-user.target
 EOF
 ```
 
-Start and enable node_exporter:
+Khởi động và bật node_exporter:
 
 ```bash
 sudo systemctl daemon-reload
@@ -112,24 +111,18 @@ sudo systemctl start node_exporter
 sudo systemctl status node_exporter
 ```
 
-Open the firewall if needed:
-
-```bash
-sudo ufw allow 9100/tcp
-```
-
-Verify the local endpoint:
+Xác minh endpoint cục bộ:
 
 ```bash
 curl http://127.0.0.1:9100/metrics
 sudo ss -lntp | grep 9100
 ```
 
-If this fails, Prometheus will not be able to scrape the target.
+Nếu bước này thất bại, Prometheus sẽ không thể scrape mục tiêu này.
 
-## 3. Prometheus Configuration
+## 3. Cấu hình Prometheus
 
-Use this scrape config in `prometheus.yml`:
+Sử dụng cấu hình scrape này trong `prometheus.yml`:
 
 ```yaml
 global:
@@ -147,101 +140,101 @@ scrape_configs:
       - targets: ['<YOUR IP>:9100']
 ```
 
-Notes:
+Ghi chú:
 
-- `ubuntu-server` is the FastNetMon metrics job.
-- `node-exporter` is required for the standard Node Exporter dashboard.
-- If you change the IP, update both targets.
+- `ubuntu-server` là job thu thập metrics của FastNetMon.
+- `node-exporter` là bắt buộc để dùng bảng điều khiển Node Exporter chuẩn.
+- Nếu thay đổi IP, hãy cập nhật cả hai target.
 
 ## 4. Docker Compose
 
-Run Prometheus and Grafana:
+Chạy Prometheus và Grafana:
 
 ```bash
 docker-compose up -d
 ```
 
-Check containers:
+Kiểm tra container:
 
 ```bash
 docker ps
 ```
 
-If Prometheus runs in Docker, it must be able to reach `<YOUR IP>:9100` and `<YOUR IP>:9209` over the network.
+Nếu Prometheus chạy trong Docker, nó phải có thể kết nối tới `<YOUR IP>:9100` và `<YOUR IP>:9209` qua mạng.
 
-## 5. Verification Checklist
+## 5. Checklist xác minh
 
-In Prometheus UI:
+Trong giao diện Prometheus:
 
-- Open `Status > Target health`
-- Confirm `ubuntu-server` is UP
-- Confirm `node-exporter` is UP
+- Mở `Status > Target health`
+- Xác nhận `ubuntu-server` đang ở trạng thái UP
+- Xác nhận `node-exporter` đang ở trạng thái UP
 
-Endpoints to test directly:
+Các endpoint cần kiểm tra trực tiếp:
 
 - `http://<YOUR IP>:9209/metrics`
 - `http://<YOUR IP>:9100/metrics`
 
-If `node-exporter` shows DOWN with connection refused:
+Nếu `node-exporter` hiển thị DOWN kèm lỗi connection refused:
 
-- node_exporter service is not running
-- node_exporter is bound to another port
-- firewall or network access is blocking port 9100
+- dịch vụ node_exporter chưa chạy
+- node_exporter đang bind vào một cổng khác
+- firewall hoặc mạng đang chặn cổng 9100
 
-## 6. Grafana Dashboard Behavior
+## 6. Cách hoạt động của dashboard Grafana
 
-The dashboard "Node Exporter Full" uses node_exporter metrics such as:
+Dashboard "Node Exporter Full" sử dụng các metric của node_exporter như:
 
 - `node_cpu_seconds_total`
 - `node_memory_MemAvailable_bytes`
 - `node_filesystem_size_bytes`
 - `node_network_receive_bytes_total`
 
-FastNetMon metrics on port `9209` are different, so they do not fill the Node Exporter dashboard panels.
+Các metric của FastNetMon trên cổng `9209` khác biệt, nên không lấp đầy các panel của dashboard Node Exporter.
 
-## 7. FastNetMon Metrics Meaning
+## 7. Ý nghĩa các metric của FastNetMon
 
-Use these metrics in Grafana when you want to monitor DDoS traffic directly:
+Sử dụng các metric này trong Grafana khi bạn muốn giám sát lưu lượng DDoS trực tiếp:
 
-- `fastnetmon_total_traffic_bits`: total traffic rate in bits per second. This is the main signal for bandwidth-based DDoS detection.
-- `fastnetmon_total_simple_packets_processed`: number of processed packets per second.
-- `fastnetmon_total_ipv4_packets` and `fastnetmon_total_ipv6_packets`: packet rate split by protocol family.
-- `fastnetmon_total_number_of_hosts`: how many hosts FastNetMon is tracking.
-- `fastnetmon_influxdb_writes_failed` and `fastnetmon_influxdb_writes_total`: health of the write pipeline.
-- `fastnetmon_speed_recalculation_time_seconds` and `fastnetmon_speed_recalculation_time_microseconds`: how long FastNetMon needs to recalculate traffic speed.
+- `fastnetmon_total_traffic_bits`: tốc độ lưu lượng tổng cộng tính bằng bit/giây. Đây là tín hiệu chính cho phát hiện DDoS theo băng thông.
+- `fastnetmon_total_simple_packets_processed`: số gói tin được xử lý mỗi giây.
+- `fastnetmon_total_ipv4_packets` và `fastnetmon_total_ipv6_packets`: tốc độ gói tin phân theo họ giao thức.
+- `fastnetmon_total_number_of_hosts`: số host mà FastNetMon đang theo dõi.
+- `fastnetmon_influxdb_writes_failed` và `fastnetmon_influxdb_writes_total`: tình trạng của pipeline ghi dữ liệu.
+- `fastnetmon_speed_recalculation_time_seconds` và `fastnetmon_speed_recalculation_time_microseconds`: thời gian FastNetMon cần để tính lại tốc độ lưu lượng.
 
-Suggested alert levels for DDoS bandwidth monitoring:
+Mức cảnh báo khuyến nghị cho giám sát băng thông DDoS:
 
-- 100 Gbps: early warning
-- 500 Gbps: high severity
-- 1 Tbps: critical incident
+- 100 Gbps: cảnh báo sớm
+- 500 Gbps: mức nghiêm trọng cao
+- 1 Tbps: sự cố critical
 
-Demo profile for class presentation:
+Hồ sơ demo cho buổi thuyết trình lớp học:
 
 ```ini
 enable_ban = on
-ban_time = 10
+ban_time = 30
 
 ban_for_pps = on
 ban_for_bandwidth = on
 ban_for_flows = on
 
-threshold_pps = 10
-threshold_mbps = 1
-threshold_flows = 10
+threshold_pps = 2000
+threshold_mbps = 50
+threshold_flows = 2000
 
-threshold_tcp_mbps = 2
-threshold_udp_mbps = 2
-threshold_icmp_mbps = 1
+threshold_tcp_mbps = 50
+threshold_udp_mbps = 50
+threshold_icmp_mbps = 50
 
-threshold_tcp_pps = 30
-threshold_udp_pps = 30
-threshold_icmp_pps = 20
+threshold_tcp_pps = 2000
+threshold_udp_pps = 2000
+threshold_icmp_pps = 20000
 ```
 
-This profile is intentionally aggressive so the demo triggers quickly.
+Hồ sơ này khá aggressive nên demo sẽ kích hoạt nhanh.
 
-To prevent banning the management IP `192.168.25.129` in the demo, put it in the whitelist and keep it out of the monitored victim network list:
+Để tránh chặn IP quản trị `192.168.25.129` trong demo, hãy đưa IP này vào whitelist và giữ nó ra khỏi danh sách mạng mục tiêu bị giám sát:
 
 ```ini
 white_list_path = /etc/networks_whitelist
@@ -249,59 +242,31 @@ networks_list_path = /etc/networks_list
 monitor_local_ip_addresses = on
 ```
 
-Example `/etc/networks_whitelist` content:
+Ví dụ nội dung file `/etc/networks_whitelist`:
 
 ```text
 192.168.25.129/32
 ```
 
-Make sure the victim subnet is the only subnet you monitor for attacks. If `192.168.25.129` is your Kali box or management host, it should not be in `networks_list`.
+Hãy chắc chắn rằng chỉ có subnet mục tiêu bị giám sát, còn nếu `192.168.25.129` là máy Kali hoặc host quản trị thì nó không nên nằm trong `networks_list`.
 
-Where to see top 10 DDoS IPs:
+## 7. Các vấn đề thường gặp
 
-- In the current Prometheus/Grafana setup, the dashboard does not yet have per-attacker IP metrics.
-- FastNetMon itself tracks per-host counters, so the top talkers are available in FastNetMon's own host counters/API path, not in the aggregate Prometheus metrics shown by this dashboard.
-- If you want top 10 IPs inside Grafana, the exporter must expose per-host/per-subnet metrics with labels such as `host` or `source_ip`.
+- Không có dữ liệu trong các panel Grafana:
+  - Kiểm tra datasource đã chọn là Prometheus
+  - Kiểm tra các biến dashboard `Job`, `Nodename`, `Instance`
+  - Đảm bảo mục tiêu `node-exporter` đang ở trạng thái UP trong Prometheus
 
-How to make Grafana show the top 10 attacker IPs for real:
+- Lỗi connection refused trên cổng `9100`:
+  - node_exporter chưa được cài đặt
+  - dịch vụ node_exporter chưa khởi động thành công
+  - firewall chặn cổng `9100`
 
-1. Extend FastNetMon's exporter code to emit a per-host metric for IPv4/IPv6 host counters.
-2. Use the host IP as a Prometheus label, for example `host="192.168.25.130"`.
-3. Point the Grafana panel at that metric with `topk(10, sum by (host) (rate(<per_host_metric>[1m])))`.
-4. If the code exports `source_ip` instead of `host`, replace the label in the panel query.
+- Mục tiêu Prometheus `9209` đang UP nhưng dashboard Grafana vẫn trống:
+  - Dashboard cần các metric của node_exporter, không phải của FastNetMon
 
-Current codebase note:
+## 8. Các file trong dự án này
 
-- The existing Prometheus endpoint only exposes aggregate totals.
-- The per-host counters exist in FastNetMon internals, but not as Prometheus time series yet.
-- The Grafana Top 10 panel will stay empty until that exporter work is added.
-
-Important limitation:
-
-- The current Prometheus endpoint exposes only aggregate traffic counters.
-- It does not expose attacker IP directly yet.
-- To show attacker IP in Grafana, FastNetMon must export per-host or per-subnet metrics with a label such as `source_ip` or `host`.
-- Once that exists, a panel can use a `topk(...)` query to show the busiest source IPs.
-
-## 7. Common Issues
-
-- No data in Grafana panels:
-  - Check the selected datasource is Prometheus
-  - Check the dashboard variables `Job`, `Nodename`, `Instance`
-  - Make sure the `node-exporter` target is UP in Prometheus
-
-- Connection refused on `9100`:
-  - node_exporter is missing
-  - node_exporter service failed to start
-  - firewall blocks port `9100`
-
-- Prometheus target `9209` is UP but Grafana dashboard is empty:
-  - The dashboard expects node_exporter metrics, not FastNetMon metrics
-
-## 8. Files in This Project
-
-- `docker-compose.yml` starts Prometheus and Grafana
-- `prometheus.yml` contains the scrape targets
-- `grafana/provisioning/datasources/prometheus.yml` configures the Prometheus datasource in Grafana
-
-This setup is ready to publish to GitHub as a simple monitoring lab project.
+- `docker-compose.yml` khởi động Prometheus và Grafana
+- `prometheus.yml` chứa danh sách scrape targets
+- `grafana/provisioning/datasources/prometheus.yml` cấu hình datasource Prometheus trong Grafana
