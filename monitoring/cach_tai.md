@@ -7,7 +7,7 @@ Dự án này chạy:
 - Prometheus để thu thập dữ liệu từ cả hai mục tiêu
 - Grafana để trực quan hóa số liệu
 
-## Khởi động nhanh
+## Khởi động nhanh prometheus và grafana bằng Docker Compose
 
 Tạo các file `docker-compose.yml` và `prometheus.yml`, sau đó chạy:
 
@@ -193,15 +193,6 @@ Dashboard "Node Exporter Full" sử dụng các metric của node_exporter như:
 Các metric của FastNetMon trên cổng `9209` khác biệt, nên không lấp đầy các panel của dashboard Node Exporter.
 
 ## 7. Ý nghĩa các metric của FastNetMon
-
-Sử dụng các metric này trong Grafana khi bạn muốn giám sát lưu lượng DDoS trực tiếp:
-
-- `fastnetmon_total_traffic_bits`: tốc độ lưu lượng tổng cộng tính bằng bit/giây. Đây là tín hiệu chính cho phát hiện DDoS theo băng thông.
-- `fastnetmon_total_simple_packets_processed`: số gói tin được xử lý mỗi giây.
-- `fastnetmon_total_ipv4_packets` và `fastnetmon_total_ipv6_packets`: tốc độ gói tin phân theo họ giao thức.
-- `fastnetmon_total_number_of_hosts`: số host mà FastNetMon đang theo dõi.
-- `fastnetmon_influxdb_writes_failed` và `fastnetmon_influxdb_writes_total`: tình trạng của pipeline ghi dữ liệu.
-- `fastnetmon_speed_recalculation_time_seconds` và `fastnetmon_speed_recalculation_time_microseconds`: thời gian FastNetMon cần để tính lại tốc độ lưu lượng.
 
 Mức cảnh báo khuyến nghị cho giám sát băng thông DDoS:
 
