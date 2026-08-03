@@ -44,7 +44,7 @@ Hệ thống đã được đánh giá qua việc giả lập các phương th�
 ## 📊 Kết Quả Đánh Giá
 
 * **Thời gian phản ứng:** Hệ thống hoạt động nhạy bén, cảnh báo trên màn hình Ubuntu Server chỉ mất từ 2-5 giây và mất khoảng 5-10 giây để gửi thông báo tới Telegram Bot API.
-* **Độ chính xác:** Đạt mức 100% khi phát hiện đúng các loại tấn công giả lập với băng thông và lượng gói tin đủ lớn.
+* **Độ chính xác:** Đạt mức ổn định khi phát hiện đúng các loại tấn công giả lập với băng thông và lượng gói tin đủ lớn.
 
 ---
 
